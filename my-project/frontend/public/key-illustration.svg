@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Golden key locking AI chat">
+  <!-- soft backdrop -->
+  <ellipse cx="160" cy="210" rx="110" ry="14" fill="#EEF2FF"/>
+  <!-- chat bubble -->
+  <rect x="150" y="60" width="130" height="90" rx="20" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="3"/>
+  <circle cx="175" cy="95" r="6" fill="#E2E8F0"/>
+  <rect x="190" y="89" width="60" height="12" rx="6" fill="#E2E8F0"/>
+  <rect x="175" y="112" width="80" height="12" rx="6" fill="#EEF2FF"/>
+  <!-- lock badge -->
+  <circle cx="255" cy="140" r="26" fill="#4F46E5"/>
+  <rect x="244" y="138" width="22" height="18" rx="4" fill="#fff"/>
+  <path d="M248 138 v-5 a7 7 0 0 1 14 0 v5" fill="none" stroke="#fff" stroke-width="4"/>
+  <circle cx="255" cy="147" r="3" fill="#4F46E5"/>
+  <!-- golden key (focal point) -->
+  <g transform="rotate(-18 110 130)">
+    <circle cx="80" cy="110" r="34" fill="#FACC15" stroke="#EAB308" stroke-width="6"/>
+    <circle cx="80" cy="110" r="13" fill="#fff"/>
+    <rect x="106" y="102" width="78" height="16" rx="8" fill="#FACC15" stroke="#EAB308" stroke-width="4"/>
+    <rect x="150" y="102" width="10" height="26" rx="5" fill="#EAB308"/>
+    <rect x="168" y="102" width="10" height="20" rx="5" fill="#EAB308"/>
+  </g>
+  <!-- sparkles -->
+  <path d="M60 60 l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#FACC15"/>
+  <circle cx="270" cy="60" r="6" fill="#C7D2FE"/>
+  <circle cx="40" cy="170" r="5" fill="#A5F3FC"/>
+</svg>

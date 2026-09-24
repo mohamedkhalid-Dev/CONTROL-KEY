@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "schedule": {
+    "preDeploy": true,
+    "intervalHours": 24,
+    "onMigration": true
+  },
+  "subagents": [
+    { "id": "frontend", "scope": "my-project/frontend", "spec": "security/subagents/frontend.monitor.md" },
+    { "id": "backend", "scope": "my-project/backend", "spec": "security/subagents/backend.monitor.md" },
+    { "id": "supabase", "scope": "my-project/supabase + frontend/src/lib/supabase", "spec": "security/subagents/supabase.monitor.md" },
+    { "id": "deploy", "scope": "vercel + env + gitignore", "spec": "security/subagents/deploy.monitor.md" }
+  ],
+  "primaryAgent": "security/primary-agent.md",
+  "reportFormat": "[SEVERITY: High/Med/Low] file:line - issue - evidence - fix",
+  "severityRubric": {
+    "High": "RSL bypass, secret in git/client bundle, XSS executable, auth bypass",
+    "Med": "Open redirect, weak CSP, plaintext key duplication, missing CORS/throttle, APP_DEBUG=true in prod template",
+    "Low": "Defense-in-depth hardening, log hygiene, docs drift"
+  },
+  "auditScript": "frontend/scripts/security-audit.mjs",
+  "npmScript": "security:audit"
+}

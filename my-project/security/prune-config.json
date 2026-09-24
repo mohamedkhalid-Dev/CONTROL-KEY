@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "schedule": { "preDeploy": true },
+  "subagents": [
+    { "id": "prune-frontend", "scope": "my-project/frontend", "spec": "security/subagents/prune-frontend.md" },
+    { "id": "prune-backend", "scope": "my-project/backend", "spec": "security/subagents/prune-backend.md" },
+    { "id": "prune-supabase-docs", "scope": "my-project/supabase + docs", "spec": "security/subagents/prune-supabase-docs.md" },
+    { "id": "prune-deploy", "scope": "vercel + env + gitignore", "spec": "security/subagents/prune-deploy.md" }
+  ],
+  "primaryAgent": "security/primary-agent.md",
+  "auditScript": "frontend/scripts/prune-audit.mjs",
+  "npmScript": "prune:audit",
+  "deletePolicy": "Primary deletes ONLY items verified with zero references (grep), regenerable artifacts, or explicit safe-delete:yes from all reporting agents. Conflicts resolve to KEEP. Migrations are append-only — never delete. Env files are never deleted locally."
+}

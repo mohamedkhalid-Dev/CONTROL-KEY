@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Control Key logo — silver key on black circle">
+  <circle cx="256" cy="256" r="248" fill="#000000"/>
+  <g transform="rotate(-45 256 256)">
+    <circle cx="340" cy="256" r="78" fill="#C9CDD3"/>
+    <circle cx="365" cy="256" r="26" fill="#000000"/>
+    <rect x="128" y="236" width="180" height="40" rx="10" fill="#C9CDD3"/>
+    <rect x="162" y="272" width="30" height="38" rx="7" fill="#C9CDD3"/>
+    <rect x="212" y="272" width="30" height="30" rx="7" fill="#C9CDD3"/>
+  </g>
+</svg>

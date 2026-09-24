@@ -1,0 +1,19 @@
+# node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+*.log
+npm-debug.log*
+# env (never commit secrets)
+.env
+.env.local
+.env*.local
+# Laravel
+../backend/.env
+../backend/vendor/
+# supabase
+.branches/
+# OS
+.DS_Store
+Thumbs.db

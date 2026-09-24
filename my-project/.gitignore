@@ -1,0 +1,11 @@
+# .env + secrets
+.env
+.env.local
+**/.env
+backend/vendor/
+frontend/node_modules/
+frontend/.next/
+# generated / logs (never commit)
+*.tsbuildinfo
+*.log
+npm-debug.log*

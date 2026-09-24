@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /chat
+Disallow: /onboarding
+Disallow: /login
+Disallow: /auth/callback
+Disallow: /api
+
+Sitemap: https://controlkey.vercel.app/sitemap.xml

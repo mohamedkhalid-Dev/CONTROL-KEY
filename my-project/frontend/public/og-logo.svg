@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Control Key — You Hold the Key">
+  <rect width="1200" height="630" fill="#FFFFFF"/>
+  <rect width="1200" height="630" fill="#F8FAFC" opacity="0.6"/>
+  <circle cx="360" cy="315" r="180" fill="#000000"/>
+  <g transform="rotate(-45 360 360)">
+    <circle cx="410" cy="360" r="56" fill="#C9CDD3"/>
+    <circle cx="428" cy="360" r="19" fill="#000000"/>
+    <rect x="248" y="345" width="130" height="29" rx="7" fill="#C9CDD3"/>
+    <rect x="272" y="370" width="22" height="27" rx="5" fill="#C9CDD3"/>
+    <rect x="308" y="370" width="22" height="21" rx="5" fill="#C9CDD3"/>
+  </g>
+  <text x="590" y="285" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#111827">Control Key</text>
+  <text x="592" y="345" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="500" fill="#64748B">You Hold the Key. AI Follows YOUR Rules.</text>
+  <rect x="592" y="380" width="220" height="56" rx="16" fill="#2563EB"/>
+  <text x="702" y="416" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle">Start Free</text>
+</svg>

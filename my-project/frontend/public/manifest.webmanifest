@@ -1,0 +1,23 @@
+{
+  "name": "Control Key — You Control AI",
+  "short_name": "Control Key",
+  "description": "Set locks like 'Teach me, don't solve.' AI can't cross them. Free forever.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/logo-circle.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

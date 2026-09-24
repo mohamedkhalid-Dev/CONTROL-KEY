@@ -1,0 +1,13 @@
+{
+  "name": "control-key",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Control Key — You Hold the Key. AI Follows YOUR Rules. (root helper: run scripts from here)",
+  "scripts": {
+    "start": "npm run dev --prefix my-project/frontend",
+    "dev": "npm run dev --prefix my-project/frontend",
+    "build": "npm run build --prefix my-project/frontend",
+    "lint": "npm run lint --prefix my-project/frontend",
+    "install:all": "npm install --prefix my-project/frontend"
+  }
+}

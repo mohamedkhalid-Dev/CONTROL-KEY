@@ -6,4 +6,4 @@ Disallow: /login
 Disallow: /auth/callback
 Disallow: /api
 
-Sitemap: https://controlkey.vercel.app/sitemap.xml
+Sitemap: https://controlkey-gbqs40uak-show16.vercel.app/sitemap.xml

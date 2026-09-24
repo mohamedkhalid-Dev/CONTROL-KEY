@@ -7,7 +7,7 @@ import { safeNextPath } from "@/lib/securityMonitor";
 
 /**
  * Exchanges the PKCE code from Supabase email links
- * (e.g. https://controlkey.vercel.app/auth/callback?code=...).
+ * (e.g. https://controlkey-gbqs40uak-show16.vercel.app/auth/callback?code=...).
  * Uses the browser client so the stored code verifier in localStorage matches.
  */
 export function CallbackClient() {

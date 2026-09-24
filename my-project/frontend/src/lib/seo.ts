@@ -6,8 +6,8 @@ import type { Metadata } from "next";
  * Falls back to the production domain when the env var is unset.
  */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://controlkey.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "") ||
+  "https://controlkey-gbqs40uak-show16.vercel.app";
 
 export const SITE_NAME = "Control Key";
 export const SITE_TAGLINE = "You Hold the Key. AI Follows YOUR Rules.";

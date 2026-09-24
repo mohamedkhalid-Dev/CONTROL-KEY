@@ -264,7 +264,7 @@ export async function streamChat(opts: {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key.trim()}`,
-        "HTTP-Referer": "https://controlkey.vercel.app",
+        "HTTP-Referer": "https://controlkey-gbqs40uak-show16.vercel.app",
         "X-Title": "Control Key",
       },
       body: JSON.stringify({

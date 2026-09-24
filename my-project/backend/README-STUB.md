@@ -33,7 +33,7 @@ Also add Supabase + OpenRouter to `config/services.php` (for the encrypted cloud
     'service_key' => env('SUPABASE_SERVICE_KEY'),
 ],
 'openrouter' => [
-    'referer' => env('OPENROUTER_REFERER', 'https://controlkey-gbqs40uak-show16.vercel.app'),
+    'referer' => env('OPENROUTER_REFERER', 'https://controlkey.vercel.app'),
     'title' => env('OPENROUTER_TITLE', 'Control Key'),
 ],
 ```

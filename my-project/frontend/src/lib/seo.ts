@@ -7,7 +7,7 @@ import type { Metadata } from "next";
  */
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "") ||
-  "https://controlkey-gbqs40uak-show16.vercel.app";
+  "https://controlkey.vercel.app";
 
 export const SITE_NAME = "Control Key";
 export const SITE_TAGLINE = "You Hold the Key. AI Follows YOUR Rules.";

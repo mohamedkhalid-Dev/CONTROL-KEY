@@ -82,7 +82,7 @@ function authErrorResult(error: unknown): AuthActionResult {
  */
 function siteBase(): string {
   const v = (SITE_URL ?? "").replace(/\/$/, "");
-  return v || "https://controlkey-gbqs40uak-show16.vercel.app";
+  return v || "https://controlkey.vercel.app";
 }
 
 /**
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          // Verification emails land on controlkey-gbqs40uak-show16.vercel.app, then forward to /login?verified=1.
+          // Verification emails land on controlkey.vercel.app, then forward to /login?verified=1.
           // The /auth/callback route exchanges the PKCE ?code= before redirecting.
           emailRedirectTo: `${siteBase()}/auth/callback?next=/login%3Fverified%3D1`,
         },

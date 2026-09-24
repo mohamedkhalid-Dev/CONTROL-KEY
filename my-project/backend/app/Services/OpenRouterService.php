@@ -25,7 +25,7 @@ class OpenRouterService
     public function chat(array $messages, string $model, string $userKey): array
     {
         $res = Http::withHeaders([
-                'HTTP-Referer' => config('services.openrouter.referer', 'https://controlkey-gbqs40uak-show16.vercel.app'),
+                'HTTP-Referer' => config('services.openrouter.referer', 'https://controlkey.vercel.app'),
                 'X-Title' => 'Control Key',
             ])
             ->withToken($userKey)
@@ -68,7 +68,7 @@ class OpenRouterService
      */
     public function stream(array $messages, string $model, string $userKey): StreamedResponse|\Illuminate\Http\JsonResponse
     {
-        $referer = (string) config('services.openrouter.referer', 'https://controlkey-gbqs40uak-show16.vercel.app');
+        $referer = (string) config('services.openrouter.referer', 'https://controlkey.vercel.app');
 
         // Use Guzzle directly so we can pipe SSE chunks without buffering.
         $client = new \GuzzleHttp\Client(['timeout' => 60, 'connect_timeout' => 10, 'stream' => true]);

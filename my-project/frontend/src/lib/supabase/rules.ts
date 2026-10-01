@@ -1,4 +1,5 @@
 import { supabase } from "./client";
+import { assertOwner } from "./owner";
 import type { Rule } from "@/lib/ruleGuard";
 
 /**
@@ -35,6 +36,8 @@ function toRule(r: RuleDbRow, fallbackPriority: number): Rule {
 }
 
 export async function listRules(userId: string, limit = 50): Promise<Rule[]> {
+  // Ownership check (fail-fast; RLS USING (auth.uid() = user_id) enforces server-side).
+  await assertOwner(userId);
   const { data, error } = await supabase
     .from("control_rules")
     .select("id,title,instruction,is_enabled,strength,category,priority,violation_count,updated_at")
@@ -46,6 +49,8 @@ export async function listRules(userId: string, limit = 50): Promise<Rule[]> {
 }
 
 export async function upsertRule(userId: string, rule: Rule): Promise<void> {
+  // userId MUST equal auth.uid() — prevents IDOR writes to another user's rows.
+  await assertOwner(userId);
   const { error } = await supabase.from("control_rules").upsert(
     {
       id: rule.id,
@@ -64,12 +69,16 @@ export async function upsertRule(userId: string, rule: Rule): Promise<void> {
   if (error) throw error;
 }
 
-export async function deleteRule(id: string): Promise<void> {
-  const { error } = await supabase.from("control_rules").delete().eq("id", id);
+export async function deleteRule(userId: string, id: string): Promise<void> {
+  // Scoped by BOTH id + user_id so a guessed UUID can never delete
+  // another user's lock, even if RLS were misconfigured.
+  await assertOwner(userId);
+  const { error } = await supabase.from("control_rules").delete().eq("id", id).eq("user_id", userId);
   if (error) throw error;
 }
 
 export async function deleteAllRules(userId: string): Promise<void> {
+  await assertOwner(userId);
   const { error } = await supabase.from("control_rules").delete().eq("user_id", userId);
   if (error) throw error;
 }

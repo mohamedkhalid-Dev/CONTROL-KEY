@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeSanitize from "rehype-sanitize";
 import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
+import { safeHref } from "@/lib/securityMonitor";
 import { timeAgo } from "@/lib/time";
 import type { ChatMessage } from "@/hooks/useChats";
 
@@ -140,8 +141,13 @@ export function MessageBubble({
                   return <CodeBlock lang={lang} code={text} />;
                 },
                 a({ href, children }) {
+                  // Defense-in-depth: rehype-sanitize strips javascript:/data:
+                  // first, then allowlist https only — anything else renders
+                  // as plain text so a crafted AI link can never execute.
+                  const safe = safeHref(href);
+                  if (!safe) return <span className="font-bold">{children}</span>;
                   return (
-                    <a href={href} target="_blank" rel="noopener noreferrer" className="font-bold text-[#2563EB] underline">
+                    <a href={safe} target="_blank" rel="noopener noreferrer" className="font-bold text-[#2563EB] underline">
                       {children}
                     </a>
                   );

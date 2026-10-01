@@ -23,7 +23,10 @@ import { useAuth } from "@/lib/auth";
 interface Draft {
   name: string;
   age: number;
-  key: string;
+  // No `key` field: the OpenRouter secret lives ONLY in ck_openrouter_key
+  // (see storage.ts). A previous version persisted it here too — legacy
+  // drafts may still contain `key`, which is ignored on load below.
+  key?: string;
 }
 
 const DEFAULT_DRAFT: Draft = { name: "", age: 14, key: "" };
@@ -48,20 +51,21 @@ export function OnboardingWizard() {
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [returningChecked, setReturningChecked] = useState(false);
 
-  // Load draft once
+  // Load draft once (name/age only — legacy draft.key is never restored)
   useEffect(() => {
     const d = draftStorage.get<Draft>(DEFAULT_DRAFT);
     setName(d.name ?? "");
     setAge(typeof d.age === "number" ? d.age : 14);
-    setKeyState((s) => ({ ...s, key: d.key ?? "" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist draft (key draft stays local too — never sent to Supabase)
+  // Persist draft: name/age only. The API key stays in component state until
+  // finish() moves it to keyStorage — never in the draft, never in Supabase.
   useEffect(() => {
-    draftStorage.set({ name, age, key: keyState.key });
-  }, [name, age, keyState.key]);
+    draftStorage.set({ name, age });
+  }, [name, age]);
 
   // Keep URL in sync
   useEffect(() => {
@@ -76,6 +80,41 @@ export function OnboardingWizard() {
       setStep(1);
     }
   }, [authLoading, user, step]);
+
+  // Returning user? Cloud profile already has name + age → heal local
+  // cache and skip straight to /chat. Never re-ask name/age.
+  useEffect(() => {
+    if (authLoading || !user || returningChecked) return;
+    const uid = user.id;
+    const uemail = user.email ?? null;
+    let cancelled = false;
+    async function checkReturning() {
+      try {
+        const existing = await profilesClient.getProfile(uid);
+        if (cancelled) return;
+        if (existing?.display_name) {
+          profileStorage.set({
+            userId: existing.user_id,
+            displayName: existing.display_name,
+            age: existing.age ?? 14,
+            avatarColor: avatarColorFor(existing.display_name),
+            email: existing.email ?? uemail,
+          });
+          draftStorage.remove();
+          router.replace("/chat");
+          return;
+        }
+      } catch {
+        /* offline / RLS — stay in wizard, new-user flow */
+      } finally {
+        if (!cancelled) setReturningChecked(true);
+      }
+    }
+    void checkReturning();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, returningChecked, router]);
 
   const canNext = useMemo(() => {
     if (step === 1) return !!user;
@@ -143,8 +182,8 @@ export function OnboardingWizard() {
     router.push("/chat?welcome=1");
   }
 
-  if (authLoading) {
-    return <main className="ck-container flex min-h-screen items-center justify-center py-10 text-center">Opening secure setup…</main>;
+  if (authLoading || (user && !returningChecked)) {
+    return <main className="ck-container flex min-h-screen items-center justify-center py-10 text-center">{user ? "Welcome back… opening your saved setup…" : "Opening secure setup…"}</main>;
   }
 
   return (

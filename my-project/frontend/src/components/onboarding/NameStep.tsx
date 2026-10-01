@@ -27,7 +27,7 @@ export function NameStep({
         <div className="flex-1">
           <Input
             label="Your first name"
-            placeholder="Sara"
+            placeholder="Mohammed"
             value={name}
             maxLength={30}
             autoComplete="off"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -9,12 +9,35 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 
+const AUTH_COOLDOWN_KEY = "ck_auth_cooldown_until";
+
+function readAuthCooldown(): number | null {
+  try {
+    const until = Number(sessionStorage.getItem(AUTH_COOLDOWN_KEY));
+    const remaining = Math.ceil((until - Date.now()) / 1000);
+    return remaining > 0 ? remaining : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuthCooldown(seconds: number): void {
+  try {
+    sessionStorage.setItem(AUTH_COOLDOWN_KEY, String(Date.now() + seconds * 1000));
+  } catch {
+    /* private mode */
+  }
+}
+
 /**
  * LoginStep — Step 1 of onboarding (email + password).
  * When already logged in, shows account + lets the user continue.
+ * Brute-force guard: honors Supabase Auth 429s with a sessionStorage
+ * cooldown that disables submit (mirrors LoginForm) — client-side
+ * equivalent of Laravel `throttle:5,1` + temporary lockout.
  */
 export function LoginStep() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, requestPasswordReset } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +49,23 @@ export function LoginStep() {
   const [formErr, setFormErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [retryIn, setRetryIn] = useState<number | null>(() => readAuthCooldown());
+  const [resetSent, setResetSent] = useState(false);
+
+  useEffect(() => {
+    if (retryIn === null) return;
+    if (retryIn <= 0) {
+      setRetryIn(null);
+      try {
+        sessionStorage.removeItem(AUTH_COOLDOWN_KEY);
+      } catch {
+        /* private mode */
+      }
+      return;
+    }
+    const timer = window.setTimeout(() => setRetryIn((v) => (v === null ? null : v - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [retryIn]);
 
   if (user) {
     return (
@@ -37,7 +77,7 @@ export function LoginStep() {
           You&apos;re logged in.
         </h2>
         <p className="mx-auto mt-1 max-w-xs text-sm text-slate-600 dark:text-slate-300">
-          {user.email ?? "Account ready."} Select Next to add your name.
+          {user.email ?? "Account ready."} Opening your saved setup — no need to enter name or age again.
         </p>
       </div>
     );
@@ -59,7 +99,7 @@ export function LoginStep() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (busy || retryIn !== null) return;
     setFormErr(null);
     setDone(null);
     if (!validateAll()) return;
@@ -67,6 +107,10 @@ export function LoginStep() {
     const result = mode === "signin" ? await signIn(email, password) : await signUp(email, password);
     setBusy(false);
     if (result.error) {
+      if (result.retryAfterSeconds) {
+        setRetryIn(result.retryAfterSeconds);
+        saveAuthCooldown(result.retryAfterSeconds);
+      }
       setFormErr(result.error);
       return;
     }
@@ -75,6 +119,21 @@ export function LoginStep() {
     }
     // On sign-in the session updates via onAuthStateChange and the
     // logged-in state above takes over — Next unlocks automatically.
+  }
+
+  async function forgotPassword() {
+    setFormErr(null);
+    const e = validateEmail(email);
+    setEmailErr(e.ok ? undefined : e.error);
+    if (!e.ok) return;
+    const result = await requestPasswordReset(email);
+    if (result.error) {
+      setFormErr(result.error);
+      return;
+    }
+    // Generic confirmation — never reveals whether the email exists.
+    setResetSent(true);
+    setDone("If that email has an account, a reset link is on its way (expires in 1 hour, single-use).");
   }
 
   return (
@@ -101,6 +160,7 @@ export function LoginStep() {
               setMode(m);
               setFormErr(null);
               setDone(null);
+              setResetSent(false);
               setConsent(false);
               setConsentErr(undefined);
             }}
@@ -133,7 +193,7 @@ export function LoginStep() {
             label="Password"
             type={showPw ? "text" : "password"}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            placeholder="6+ characters"
+            placeholder="8+ characters"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -141,19 +201,31 @@ export function LoginStep() {
             }}
             error={pwErr}
           />
-          <button
-            type="button"
-            onClick={() => setShowPw((v) => !v)}
-            aria-pressed={showPw}
-            className="mt-1 min-h-[36px] text-xs font-bold text-[#4F46E5] underline"
-          >
-            {showPw ? "Hide" : "Show"}
-          </button>
+          <div className="mt-1 flex min-h-[36px] items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              aria-pressed={showPw}
+              className="text-xs font-bold text-[#4F46E5] underline"
+            >
+              {showPw ? "Hide" : "Show"}
+            </button>
+            {mode === "signin" && !resetSent && (
+              <button
+                type="button"
+                onClick={forgotPassword}
+                className="text-xs font-bold text-[#4F46E5] underline"
+              >
+                Forgot password?
+              </button>
+            )}
+          </div>
         </div>
 
         {formErr && (
           <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
             {formErr}
+            {retryIn !== null && <span className="mt-1 block text-xs font-semibold">Try again in {retryIn}s.</span>}
           </p>
         )}
         {done && (
@@ -207,8 +279,8 @@ export function LoginStep() {
           </p>
         )}
 
-        <Button type="submit" size="lg" className="w-full" disabled={busy || (mode === "signup" && !consent)}>
-          {busy ? "Checking…" : mode === "signin" ? "Log in" : "Create my account"}
+        <Button type="submit" size="lg" className="w-full" disabled={busy || retryIn !== null || (mode === "signup" && !consent)}>
+          {busy ? "Checking…" : retryIn !== null ? `Try again in ${retryIn}s…` : mode === "signin" ? "Log in" : "Create my account"}
         </Button>
       </form>
     </div>

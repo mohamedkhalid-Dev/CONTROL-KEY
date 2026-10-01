@@ -150,6 +150,13 @@ See `../ROADMAP-Control-Key.md` (single source of truth).
 - Public pages indexed: `/`, `/guide/get-key`, `/faq`, `/privacy`, `/terms`, `/parents`
   (`/sitemap.xml`, robots disallows `/chat` + `/onboarding` + `/login`).
 - Post-launch: Supabase advisors (security + performance) clean as of 2026-09-22; re-run after each migration.
+- Dependencies (weekly): `cd my-project/frontend && npm audit` (fails on High/Critical;
+  `npm run security:audit` for project rules). Dependabot bumps npm + composer weekly
+  (see `/.github/dependabot.yml`); do NOT auto-merge Next.js majors — test first.
+  Uploads: no user file-upload feature ships; any future one MUST use
+  `frontend/src/lib/fileUpload.ts` + `backend/app/Services/FileUploadValidator.php`
+  (allowlist png/jpg/webp/gif/pdf/txt/md/csv, 5 MB max, hash filenames,
+  private storage, attachment downloads). SVG/PHP/HTML uploads stay blocked.
 - Analytics: intentionally **none** — no tracking for kids beats "privacy-friendly" tracking.
   If ever needed, add Plausible via env-gated script + CSP update.
 - OG social card: `frontend/public/og-image.png` (1200×630, gold key + tagline).

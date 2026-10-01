@@ -140,12 +140,16 @@ export function SettingsModal({
       avatarColor: profileStorage.get()?.avatarColor ?? "#4F46E5",
       email: authEmail,
     });
-    // Best-effort cloud mirror via sub-client: name, age, email only (works when logged in)
+    // Best-effort cloud mirror via sub-client: name, age, email only (works when logged in).
+    // Access control: cloud user_id MUST equal the signed-in auth.uid() —
+    // never trust profileStorage/local IDs for server writes (IDOR guard;
+    // profilesClient.assertOwner + RLS USING (auth.uid() = user_id) enforce it).
     try {
       const p = profileStorage.get();
-      if (p && authId !== "demo-local" && !authId.startsWith("local-")) {
+      const signedInId = authUser?.id ?? null;
+      if (p && signedInId && authId === signedInId && !signedInId.startsWith("local-")) {
         profilesClient
-          .upsertProfile({ userId: authId, displayName: p.displayName, age: p.age, email: authEmail })
+          .upsertProfile({ userId: signedInId, displayName: p.displayName, age: p.age, email: authEmail })
           .catch(() => {});
       }
     } catch {
@@ -210,7 +214,10 @@ export function SettingsModal({
 
   async function wipeAccount() {
     if (deleteWord.trim().toUpperCase() !== "DELETE") return;
-    const uid = authUser?.id ?? profileStorage.get()?.userId;
+    // Access control: cloud wipe only for the signed-in owner. Never fall
+    // back to a localStorage id — that would allow deleting another user's
+    // rows if the local id were tampered with (IDOR).
+    const uid = authUser?.id ?? null;
     try {
       for (const k of ["ck_profile", "ck_onboarding_draft", "ck_openrouter_key", "ck_chats_v1", "ck_messages_v1", "ck_custom_locks", "ck_discipline", "ck_last_model", "ck_tour_done"]) {
         localStorage.removeItem(k);

@@ -159,7 +159,8 @@ export function useRules() {
 
   const cloudDelete = React.useCallback((id: string) => {
     if (!isCloudId(authUserId)) return;
-    rulesClient.deleteRule(id).catch(() => {});
+    // Ownership enforced inside rulesClient.deleteRule (assertOwner + user_id scope).
+    rulesClient.deleteRule(authUserId as string, id).catch(() => {});
   }, [authUserId]);
 
   const createRule = React.useCallback(

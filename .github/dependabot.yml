@@ -1,0 +1,17 @@
+# Dependabot — weekly patched-version bumps (Agent 5: uploads + dependencies).
+# Frontend npm + backend composer are scanned separately. Major Next.js
+# upgrades (14 -> 15/16) are intentionally NOT auto-merged — test first.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/my-project/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security"]
+  - package-ecosystem: "composer"
+    directory: "/my-project/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security"]

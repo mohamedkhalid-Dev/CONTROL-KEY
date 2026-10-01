@@ -9,7 +9,7 @@ import { CategoryIcon } from "@/components/rules/CategoryIcon";
 
 /**
  * TemplateGallery — "Need ideas?" (custom-only safe).
- * The 12 ideas are INSPIRATION: tapping one only pre-fills the New-lock
+ * The 13 ideas are INSPIRATION: tapping one only pre-fills the New-lock
  * form. Nothing is saved until review + confirm — every
  * stored lock stays origin='custom', authored by the user.
  */

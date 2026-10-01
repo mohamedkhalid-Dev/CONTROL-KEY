@@ -3,6 +3,8 @@
  * Key never logged in full. All errors mapped to kid-friendly messages.
  */
 
+import { asksForImageGeneration, buildImageRefusal } from "@/lib/promptBuilder";
+
 export const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 
 export interface ChatModel {
@@ -395,6 +397,10 @@ export async function streamChat(opts: {
 
 /** Demo-mode canned reply — no key needed, teaches with hints. */
 export function getDemoReply(userText: string): string {
+  // Platform rule: image generation is prohibited — single source in promptBuilder.
+  if (asksForImageGeneration(userText)) {
+    return buildImageRefusal();
+  }
   const t = userText.toLowerCase();
   if (/photo|synth|hint 1/i.test(userText) || t.includes("photosynthesis"))
     return "**Hint 1:** Plants produce food with sunlight, water, and air.\n\n**Hint 2:** Chlorophyll captures the sunlight.\n\n**Your turn:** Which gas do you think plants take in? Try one guess.";

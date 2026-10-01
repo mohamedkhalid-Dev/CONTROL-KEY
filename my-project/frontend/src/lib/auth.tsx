@@ -13,6 +13,8 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<AuthActionResult>;
+  updatePassword: (newPassword: string) => Promise<AuthActionResult>;
 }
 
 export interface AuthActionResult {
@@ -27,17 +29,20 @@ function isLegacyAnonymousUser(user: User | null): boolean {
   return (user as (User & { is_anonymous?: boolean }) | null)?.is_anonymous === true;
 }
 
-/** Friendly Supabase error → plain language, no jargon. */
+/** Friendly Supabase error → plain language, no jargon.
+ * Sign-in failures are generic ("Invalid credentials" equivalent) so an
+ * attacker cannot enumerate registered emails. Signup "already registered"
+ * is likewise normalized — do NOT confirm account existence. */
 export function friendlyAuthError(message: string): string {
   const m = message.toLowerCase();
   if (m.includes("invalid login credentials") || m.includes("invalid email or password"))
-    return "Email or password didn't match. Check spelling or create an account.";
+    return "Invalid credentials. Check spelling or create an account.";
   if (m.includes("user already registered") || m.includes("already exists"))
-    return "You already have an account. Select “Log in” instead.";
+    return "Something went wrong. Try logging in instead.";
   if (m.includes("email not confirmed") || m.includes("confirm"))
     return "Check your inbox — select the confirm link, then log in.";
   if (m.includes("password should be"))
-    return "Password needs 6+ characters. Make it a bit longer.";
+    return "Password needs 8+ characters. Make it a bit longer.";
   if (m.includes("invalid email"))
     return "That email looks off. Check the spelling.";
   if (m.includes("rate limit") || m.includes("too many"))
@@ -184,6 +189,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  /**
+   * requestPasswordReset — sends a recovery email via Supabase Auth.
+   * The link contains a cryptographically random, single-use token that
+   * expires (default <=1h, configured in Supabase Dashboard > Auth).
+   * Never log the token; it arrives only via the user's inbox.
+   * Response is generic so it cannot be used to enumerate accounts.
+   */
+  const requestPasswordReset = React.useCallback(async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo: `${siteBase()}/auth/callback?next=/login` },
+      );
+      if (error) return authErrorResult(error);
+      // Generic success even if email is unknown (no enumeration).
+      return { error: null };
+    } catch (e) {
+      return authErrorResult(e);
+    }
+  }, []);
+
+  /** updatePassword — sets a new password for a recovery/authenticated session. */
+  const updatePassword = React.useCallback(async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return authErrorResult(error);
+      return { error: null };
+    } catch (e) {
+      return authErrorResult(e);
+    }
+  }, []);
+
   const value = React.useMemo<AuthContextValue>(() => ({
     user,
     session,
@@ -192,7 +229,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     refresh,
-  }), [user, session, loading, signUp, signIn, signOut, refresh]);
+    requestPasswordReset,
+    updatePassword,
+  }), [user, session, loading, signUp, signIn, signOut, refresh, requestPasswordReset, updatePassword]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -220,4 +259,46 @@ export async function getAuthUserId(fallbackLocalId?: string | null): Promise<st
     /* offline */
   }
   return fallbackLocalId ?? null;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2FA via Supabase MFA (TOTP). Opt-in plan:                           */
+/*  1. enrollTotp() → show qr_code / secret to user (authenticator app) */
+/*  2. verifyTotpEnrollment(factorId, code) → completes enrollment      */
+/*  3. On sign-in with AAL1 session, challengeTotp(factorId) then      */
+/*     verifyTotpChallenge(factorId, challengeId, code) → AAL2 session  */
+/* Passwords stay bcrypt-hashed server-side; TOTP secrets never leave  */
+/* Supabase Auth and are never logged. See Supabase Dashboard > Auth >  */
+/* MFA to enable TOTP.                                                  */
+/* ------------------------------------------------------------------ */
+
+export async function listMfaFactors() {
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error) return { error: friendlyAuthError(error.message), factors: [] as unknown[] };
+  return { error: null, factors: data?.totp ?? [] };
+}
+
+export async function enrollTotp(friendlyName = "authenticator") {
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName });
+  if (error) return { error: friendlyAuthError(error.message), data: null };
+  // data: { id, totp: { qr_code, secret, uri } } — render qr_code, never log secret.
+  return { error: null, data };
+}
+
+export async function verifyTotpEnrollment(factorId: string, code: string) {
+  const { data, error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+  if (error) return authErrorResult(error);
+  return { error: null, data };
+}
+
+export async function challengeTotp(factorId: string) {
+  const { data, error } = await supabase.auth.mfa.challenge({ factorId });
+  if (error) return { error: friendlyAuthError(error.message), challengeId: null };
+  return { error: null, challengeId: data?.id ?? null };
+}
+
+export async function verifyTotpChallenge(factorId: string, challengeId: string, code: string) {
+  const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
+  if (error) return authErrorResult(error);
+  return { error: null, data };
 }

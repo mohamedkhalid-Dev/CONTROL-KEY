@@ -105,10 +105,10 @@ class OpenRouterService
             Log::warning('chat.proxy.bad_response', ['status' => $status, 'model' => $model]);
             return response()->json($this->friendlyError($status, $detail), 200);
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
-            Log::warning('chat.proxy.connect', ['msg' => substr($e->getMessage(), 0, 120)]);
+            Log::warning('chat.proxy.connect', ['msg' => self::redact($e->getMessage())]);
             return response()->json(['ok' => false, 'kind' => 'offline', 'message' => "You're offline. I saved your draft. Reconnect and hit Retry."], 200);
         } catch (\Throwable $e) {
-            Log::warning('chat.proxy.error', ['msg' => substr($e->getMessage(), 0, 120)]);
+            Log::warning('chat.proxy.error', ['msg' => self::redact($e->getMessage())]);
             return response()->json(['ok' => false, 'kind' => 'unknown', 'message' => 'Something went wrong. Try again — your message is saved.'], 200);
         }
 
@@ -195,5 +195,13 @@ class OpenRouterService
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /** Redacts sk-or-* keys + emails from log lines, truncates to 120 chars. */
+    private static function redact(string $msg): string
+    {
+        $msg = preg_replace('/sk-or-[A-Za-z0-9\-_]+/', 'sk-or-...****', $msg) ?? $msg;
+        $msg = preg_replace('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', '[email]', $msg) ?? $msg;
+        return substr($msg, 0, 120);
     }
 }

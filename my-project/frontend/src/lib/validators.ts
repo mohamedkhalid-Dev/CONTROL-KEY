@@ -92,8 +92,10 @@ export function validateEmail(email: string): ValidationResult {
 
 export function validatePassword(password: string): ValidationResult {
   if (!password) return { ok: false, error: "Type a password first." };
-  if (password.length < 6)
-    return { ok: false, error: "Password needs 6+ letters. Make it a bit longer." };
+  // Min 8 chars (Supabase Auth enforces server-side + bcrypt hashes;
+  // never store or log plain-text passwords). Max 128 prevents DoS via hashing.
+  if (password.length < 8)
+    return { ok: false, error: "Password needs 8+ characters. Make it a bit longer." };
   if (password.length > 128) return { ok: false, error: "Keep password under 128 letters." };
   return { ok: true };
 }

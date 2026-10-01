@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { safeNextPath } from "@/lib/securityMonitor";
+import { profileStorage } from "@/lib/storage";
+import { profilesClient } from "@/lib/supabase";
 import { validateEmail, validatePassword, validateConsent } from "@/lib/validators";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -52,7 +54,7 @@ export function LoginForm() {
   const next = safeNextPath(params.get("next"));
   const verified = params.get("verified") === "1";
   const authError = params.get("error");
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp, requestPasswordReset } = useAuth();
 
   const [mode, setMode] = React.useState<"signin" | "signup">("signin");
   const [email, setEmail] = React.useState("");
@@ -66,6 +68,7 @@ export function LoginForm() {
   const [busy, setBusy] = React.useState<"email" | null>(null);
   const [done, setDone] = React.useState<string | null>(null);
   const [retryIn, setRetryIn] = React.useState<number | null>(readAuthCooldown);
+  const [resetSent, setResetSent] = React.useState(false);
 
   React.useEffect(() => {
     if (retryIn === null) return;
@@ -79,9 +82,44 @@ export function LoginForm() {
   }, [retryIn]);
 
   // Already logged in → go where they wanted.
+  // Returning users with a saved cloud profile skip name/age entirely.
   React.useEffect(() => {
-    if (!loading && user) router.replace(next);
-  }, [loading, user, router, next]);
+    if (loading || !user) return;
+    const uid = user.id;
+    const uemail = user.email ?? null;
+    let cancelled = false;
+    async function resolve() {
+      // Explicit ?next= (e.g. /chat) is respected; bare /login defaults
+      // to the Control Room when a profile already exists.
+      const rawNext = params.get("next");
+      if (rawNext) {
+        if (!cancelled) router.replace(next);
+        return;
+      }
+      try {
+        const existing = await profilesClient.getProfile(uid);
+        if (cancelled) return;
+        if (existing?.display_name) {
+          profileStorage.set({
+            userId: existing.user_id,
+            displayName: existing.display_name,
+            age: existing.age ?? 14,
+            avatarColor: profileStorage.get()?.avatarColor ?? "#4F46E5",
+            email: existing.email ?? uemail,
+          });
+          router.replace("/chat");
+          return;
+        }
+      } catch {
+        /* offline / RLS — fall through to default */
+      }
+      if (!cancelled) router.replace(next);
+    }
+    void resolve();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, router, next, params]);
 
   function validateAll(): boolean {
     const e = validateEmail(email);
@@ -121,7 +159,46 @@ export function LoginForm() {
       setDone("Account created. Check your inbox to confirm, then log in.");
       return;
     }
+    // Sign-in success: returning users already have a cloud profile
+    // (name + age) → heal local cache and go straight to /chat.
+    // No re-asking name/age. New users (no profile) → onboarding.
+    try {
+      const { data } = await (await import("@/lib/supabaseClient")).supabase.auth.getUser();
+      const uid = data?.user?.id;
+      if (uid) {
+        const existing = await profilesClient.getProfile(uid);
+        if (existing?.display_name) {
+          profileStorage.set({
+            userId: existing.user_id,
+            displayName: existing.display_name,
+            age: existing.age ?? 14,
+            avatarColor: profileStorage.get()?.avatarColor ?? "#4F46E5",
+            email: existing.email ?? data.user?.email ?? null,
+          });
+          router.replace(params.get("next") ? next : "/chat");
+          return;
+        }
+      }
+    } catch {
+      /* offline — fall through to default */
+    }
     router.replace(next);
+  }
+
+  async function forgotPassword() {
+    setFormErr(null);
+    const e = validateEmail(email);
+    setEmailErr(e.ok ? undefined : e.error);
+    if (!e.ok) return;
+    const result = await requestPasswordReset(email);
+    if (result.error) {
+      setFormErr(result.error);
+      return;
+    }
+    // Generic confirmation — never reveals whether the email exists.
+    // Supabase recovery tokens are cryptographically random, single-use, expire <=1h.
+    setResetSent(true);
+    setDone("If that email has an account, a reset link is on its way (expires in 1 hour, single-use).");
   }
 
   return (
@@ -160,6 +237,7 @@ export function LoginForm() {
               setMode(m);
               setFormErr(null);
               setDone(null);
+              setResetSent(false);
               setConsent(false);
               setConsentErr(undefined);
             }}
@@ -192,7 +270,7 @@ export function LoginForm() {
             label="Password"
             type={showPw ? "text" : "password"}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            placeholder="6+ characters"
+            placeholder="8+ characters"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -200,22 +278,33 @@ export function LoginForm() {
             }}
             error={pwErr}
           />
-          <button
-            type="button"
-            onClick={() => setShowPw((v) => !v)}
-            aria-pressed={showPw}
-            className="mt-1 flex min-h-[36px] items-center gap-1.5 text-xs font-bold text-[#4F46E5] underline"
-          >
-            {showPw ? (
-              <>
-                <EyeOff size={14} aria-hidden /> Hide
-              </>
-            ) : (
-              <>
-                <Eye size={14} aria-hidden /> Show
-              </>
+          <div className="mt-1 flex min-h-[36px] items-center justify-between gap-1.5">
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              aria-pressed={showPw}
+              className="flex items-center gap-1.5 text-xs font-bold text-[#4F46E5] underline"
+            >
+              {showPw ? (
+                <>
+                  <EyeOff size={14} aria-hidden /> Hide
+                </>
+              ) : (
+                <>
+                  <Eye size={14} aria-hidden /> Show
+                </>
+              )}
+            </button>
+            {mode === "signin" && !resetSent && (
+              <button
+                type="button"
+                onClick={forgotPassword}
+                className="text-xs font-bold text-[#4F46E5] underline"
+              >
+                Forgot password?
+              </button>
             )}
-          </button>
+          </div>
         </div>
 
         {formErr && (

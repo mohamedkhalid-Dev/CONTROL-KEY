@@ -22,7 +22,7 @@ import { useRules } from "@/hooks/useRules";
 import { RulesPanel } from "@/components/rules/RulesPanel";
 import { keyStorage, modelStorage, profileStorage } from "@/lib/storage";
 import { useAuth } from "@/lib/auth";
-import { buildRefusal, buildSystemPrompt, looksLikeJailbreak } from "@/lib/promptBuilder";
+import { asksForImageGeneration, buildImageRefusal, buildRefusal, buildSystemPrompt, looksLikeJailbreak } from "@/lib/promptBuilder";
 import { askedForSolution, violatesStrictLock } from "@/lib/ruleGuard";
 import {
   DEFAULT_MODEL,
@@ -52,17 +52,28 @@ function ChatInner() {
       return;
     }
     // Logged in but no local profile? Try cloud (name/age/email), then onboarding.
+    // Returning users land here after /login → profile heals from Supabase,
+    // so name/age are never asked again.
     if (!profile) {
       profilesClient
         .getProfile(authUser.id)
         .then((data) => {
-          if (data) {
+          const raw = data as unknown as {
+            user_id: string;
+            display_name?: string | null;
+            name?: string | null;
+            age?: number | null;
+            avatar_color?: string | null;
+            email?: string | null;
+          } | null;
+          const savedName = raw?.display_name ?? raw?.name ?? null;
+          if (raw && savedName) {
             const healed = {
-              userId: data.user_id as string,
-              displayName: (data.display_name as string) ?? "Student",
-              age: (data.age as number) ?? 14,
-              avatarColor: (data.avatar_color as string) ?? "#2563EB",
-              email: (data.email as string | null) ?? authUser.email ?? null,
+              userId: raw.user_id as string,
+              displayName: savedName ?? "Student",
+              age: (raw.age as number) ?? 14,
+              avatarColor: (raw.avatar_color as string) ?? profileStorage.get()?.avatarColor ?? "#2563EB",
+              email: (raw.email as string | null) ?? authUser.email ?? null,
             };
             profileStorage.set(healed);
             setProfile(healed);
@@ -137,6 +148,25 @@ function ChatInner() {
     setError(null);
     setStreamingText("");
     setIsStreaming(true);
+
+    // Platform rule: image generation is prohibited — reply locally, no API cost.
+    // AI is also aware via system prompt (promptBuilder), this guard guarantees it.
+    if (asksForImageGeneration(userText)) {
+      const reply = buildImageRefusal();
+      const words = reply.split(" ");
+      let acc = "";
+      for (let i = 0; i < words.length; i++) {
+        if (abortRef.current?.signal.aborted) break;
+        acc += (i === 0 ? "" : " ") + words[i];
+        setStreamingText(acc);
+        await new Promise((r) => setTimeout(r, 40));
+      }
+      setStreamingText("");
+      setIsStreaming(false);
+      if (!abortRef.current?.signal.aborted) chats.addMessage(sessionId, "assistant", reply, "platform-rule");
+      abortRef.current = null;
+      return;
+    }
 
     // No-key path: use the helpful local response until a key is added.
     // Behavior Contract holds here too: jailbreak + active lock → refusal.

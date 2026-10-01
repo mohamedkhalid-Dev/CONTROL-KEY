@@ -40,7 +40,7 @@ class KeyController extends Controller
                     : "Key check failed. Try again.",
             ], 200);
         } catch (\Throwable $e) {
-            Log::warning('key.validate.error', ['msg' => $e->getMessage()]);
+            Log::warning('key.validate.error', ['msg' => self::redact($e->getMessage())]);
             return response()->json([
                 'valid' => false,
                 'message' => "You're offline. Check connection and retry.",
@@ -68,5 +68,13 @@ class KeyController extends Controller
     {
         if (strlen($key) < 8) return '••••';
         return 'sk-or-...****' . substr($key, -4);
+    }
+
+    /** Redacts secrets/PII from exception messages before logging (max 120 chars). */
+    public static function redact(string $msg): string
+    {
+        $msg = preg_replace('/sk-or-[A-Za-z0-9\-_]+/', 'sk-or-...****', $msg) ?? $msg;
+        $msg = preg_replace('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', '[email]', $msg) ?? $msg;
+        return substr($msg, 0, 120);
     }
 }

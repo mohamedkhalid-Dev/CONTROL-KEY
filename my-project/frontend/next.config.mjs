@@ -26,9 +26,17 @@ const connectSrc = [
   .filter(Boolean)
   .join(" ");
 
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  // Next.js dev (Turbopack/webpack eval source-maps) needs unsafe-eval;
+  // production builds do not — keep prod strict.
+  ...(process.env.NODE_ENV === "production" ? [] : ["'unsafe-eval'"]),
+].join(" ");
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "img-src 'self' data: blob:",

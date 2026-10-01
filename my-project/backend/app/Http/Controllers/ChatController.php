@@ -29,9 +29,14 @@ class ChatController extends Controller
             'locks.*.instruction' => ['nullable', 'string', 'max:500'],
             'locks.*.strength' => ['nullable', 'in:strict,guide'],
             'locks.*.priority' => ['nullable', 'integer', 'min:1', 'max:50'],
-            // Cloud-key mode: either relay key (short-lived) or vault user_id.
+            // Cloud-key mode REMOVED: keys stay in browser localStorage ONLY.
+            // Access control: NEVER trust a client-supplied `user_id` (IDOR).
+            // There is no vault lookup here (key_vault dropped, migration 0006),
+            // so any `user_id` in the request is untrusted and must be ignored.
+            // If a future endpoint needs per-user resources, require auth
+            // (Sanctum) and enforce `$request->user()->id === $resource->user_id`
+            // or `abort(403)` via OwnerPolicy — never a raw request ID.
             'key' => ['nullable', 'string', 'starts_with:sk-or-', 'min:20', 'max:200'],
-            'user_id' => ['nullable', 'uuid'],
         ]);
 
         $system = $prompts->build(
@@ -39,6 +44,23 @@ class ChatController extends Controller
             $data['age'] ?? 14,
             $data['locks'] ?? []
         );
+
+        // Platform rule: image generation is prohibited — reply locally, no OpenRouter cost.
+        // AI is also aware via system prompt; this guard guarantees the reply.
+        $lastUser = '';
+        foreach (array_reverse($data['messages']) as $m) {
+            if (($m['role'] ?? '') === 'user' && isset($m['content'])) {
+                $lastUser = (string) $m['content'];
+                break;
+            }
+        }
+        if ($lastUser !== '' && $prompts->asksForImageGeneration($lastUser)) {
+            return response()->json([
+                'ok' => false,
+                'kind' => 'image_blocked',
+                'message' => $prompts->imageRefusal(),
+            ], 200);
+        }
 
         // QA hook: return built prompt without calling OpenRouter.
         if (config('app.env') === 'local' && $request->boolean('dry')) {
@@ -59,15 +81,16 @@ class ChatController extends Controller
         $key = isset($data['key']) ? trim($data['key']) : null;
 
         // No vault fallback: keys stay in browser localStorage ONLY (key_vault
-        // dropped in migration 0006). Cloud-key mode removed — frontend calls
-        // OpenRouter directly.
-        if (!$key && isset($data['user_id'])) {
-            Log::info('chat.proxy.vault_miss', ['model' => $data['model']]);
+        // dropped in migration 0006). A `user_id` without auth proves nothing —
+        // reject it explicitly so callers cannot probe other users' objects.
+        if ($request->has('user_id')) {
+            Log::warning('chat.proxy.user_id_rejected');
             return response()->json([
                 'ok' => false,
-                'kind' => 'no_cloud_key',
-                'message' => 'No cloud key found — chat directly from your browser instead (key stays on device). Your message is saved.',
-            ], 200);
+                'kind' => 'forbidden',
+                // Minimal response — no excess fields, no user enumeration.
+                'message' => 'Forbidden.',
+            ], 403);
         }
         if (!$key) {
             return response()->json([
@@ -83,7 +106,7 @@ class ChatController extends Controller
         try {
             return $openRouter->stream($messages, $data['model'], $key);
         } catch (\Throwable $e) {
-            Log::warning('chat.proxy.retry', ['msg' => substr($e->getMessage(), 0, 120)]);
+            Log::warning('chat.proxy.retry', ['msg' => KeyController::redact($e->getMessage())]);
             try {
                 return $openRouter->stream($messages, $data['model'], $key);
             } catch (\Throwable $e2) {

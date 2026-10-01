@@ -3,6 +3,7 @@
 import * as React from "react";
 import { DEFAULT_MODEL_CONFIG, type ModelConfig } from "@/lib/supabase";
 import { estimateTokens } from "@/lib/openrouter";
+import { downloadBlob, sanitizeDownloadName } from "@/lib/fileUpload";
 import { dayGroup, type DayGroup } from "@/lib/time";
 import { useAuth } from "@/lib/auth";
 
@@ -260,13 +261,11 @@ export function useChats() {
         format === "md"
           ? `# ${activeSession.title}\n\n_Control Key export · ${new Date().toLocaleString()} · key masked, never exported._\n\n`
           : `${activeSession.title}\n(Control Key export — key never exported)\n\n`;
+      // Safe download: explicit text/plain MIME + attachment disposition
+      // (see lib/fileUpload.ts downloadBlob) — never inline HTML/SVG.
       const blob = new Blob([header + body], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${activeSession.title.slice(0, 30).replace(/[^\w\- ]+/g, "") || "chat"}.${format}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const filename = `${sanitizeDownloadName(activeSession.title.slice(0, 30)) || "chat"}.${format}`;
+      downloadBlob(blob, filename);
     },
     [activeSession, messagesBySession]
   );

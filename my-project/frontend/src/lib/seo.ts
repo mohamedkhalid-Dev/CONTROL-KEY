@@ -12,7 +12,7 @@ export const SITE_URL =
 export const SITE_NAME = "Control Key";
 export const SITE_TAGLINE = "You Hold the Key. AI Follows YOUR Rules.";
 export const SITE_DESCRIPTION =
-  "Set locks like 'Teach me, don't solve.' AI can't cross them. Free forever for students 10-20.";
+  "Set locks like 'Teach me, don't solve.' AI can't cross them. Free forever for everyone.";
 export const OG_IMAGE = "/og-image.png"; // 1200x630 social card in public/
 export const SITE_LOCALE = "en_US";
 

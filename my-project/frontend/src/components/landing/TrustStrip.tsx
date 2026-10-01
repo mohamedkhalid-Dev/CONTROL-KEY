@@ -1,7 +1,7 @@
-import { GraduationCap, Layers, ShieldCheck } from "lucide-react";
+import { Users, Layers, ShieldCheck } from "lucide-react";
 
 const ITEMS = [
-  { icon: GraduationCap, text: "Built for students 10–20" },
+  { icon: Users, text: "Built for everyone who wants control" },
   { icon: Layers, text: "Works with 100+ OpenRouter models" },
   { icon: ShieldCheck, text: "Your rules, always enforced" },
 ];

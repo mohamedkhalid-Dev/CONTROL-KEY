@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  keywords: ["AI control", "students", "homework coach", "OpenRouter", "study"],
+  keywords: ["AI control", "personal AI rules", "focus", "OpenRouter", "study", "productivity"],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
@@ -42,10 +42,10 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-icon.svg", type: "image/svg+xml" }],
   },
   manifest: "/manifest.webmanifest",
-  openGraph: {
+    openGraph: {
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description:
-      "Get better grades with YOUR brain. Use AI as a coach, not a cheater. Free forever.",
+      "Stay focused with YOUR rules. Use AI as a coach, not a crutch. Free forever.",
     type: "website",
     url: SITE_URL,
     siteName: SITE_NAME,
@@ -99,7 +99,7 @@ export default function RootLayout({
               applicationCategory: "EducationalApplication",
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-              description: "Students set rules AI cannot cross. Free learning coach.",
+              description: "You set rules AI cannot cross. Free personal AI control.",
             }),
           }}
         />

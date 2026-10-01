@@ -3,13 +3,13 @@ import { LegalShell, legalMetadata } from "@/components/legal/LegalShell";
 
 export const metadata = legalMetadata(
   "FAQ",
-  "What is OpenRouter? Is it free? Will AI disobey? Answers for students and parents.",
+  "What is OpenRouter? Is it free? Will AI disobey? Answers for everyone.",
   "/faq"
 );
 
 const QA: [string, string][] = [
   ["What is OpenRouter?", "A shop of AI brains. You get a free key there, paste it here, and chat. Most starter models cost $0."],
-  ["Is Control Key free?", "Yes — the app is 100% free. You bring your own OpenRouter key; free models exist for students."],
+  ["Is Control Key free?", "Yes — the app is 100% free. You bring your own OpenRouter key; free models exist for everyone."],
   ["Will AI disobey my locks?", "Locks are core instructions AI cannot override. If you beg it to break them, it refuses kindly and points to My Locks. Rare slips are auto-blocked by the Shield guard."],
   ["What if I'm under 13?", "Ask a parent or teacher to help create the OpenRouter key and agree to the terms with you."],
   ["Where is my key stored?", "In your browser only (recommended). Cloud vault is opt-in and encrypted. Exports always mask it."],

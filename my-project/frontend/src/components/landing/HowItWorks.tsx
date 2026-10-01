@@ -16,8 +16,8 @@ const STEPS = [
   {
     icon: MessagesSquare,
     step: "Step 3",
-    title: "Chat safely",
-    text: "AI teaches. It never cheats for you.",
+    title: "Chat on your terms",
+    text: "AI follows your rules. It never crosses them.",
   },
 ];
 

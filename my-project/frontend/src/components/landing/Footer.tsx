@@ -39,7 +39,7 @@ export function Footer() {
             Contact
           </a>
         </nav>
-        <p className="text-xs text-[#64748B]">Made for students · Free forever · v{APP_VERSION}</p>
+        <p className="text-xs text-[#64748B]">Made for everyone · Free forever · v{APP_VERSION}</p>
       </div>
     </footer>
   );

@@ -9,7 +9,7 @@ import { publicMetadata } from "@/lib/seo";
 export const metadata = publicMetadata({
   title: "Control Key — You Control AI, Not the Other Way",
   description:
-    "Set locks like 'Teach me, don't solve.' AI can't cross them. Free forever for students 10-20.",
+    "Set locks like 'Teach me, don't solve.' AI can't cross them. Free forever for everyone.",
   path: "/",
 });
 

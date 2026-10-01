@@ -22,7 +22,7 @@ export function Testimonials() {
     <section aria-label="What students say" className="bg-[#F8FAFC] py-16 md:py-24">
       <div className="ck-container">
         <h2 className="font-heading text-center text-3xl font-extrabold text-[#111827]">
-          Students stay in control
+          People stay in control
         </h2>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {QUOTES.map((q) => (

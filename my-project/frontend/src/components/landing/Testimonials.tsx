@@ -5,7 +5,7 @@ const QUOTES = [
     badge: "7 days consistent",
   },
   {
-    name: "Sara, 17",
+    name: "Mohammed, 17",
     text: "AI quizzes me now. I feel ready for exams.",
     badge: "Improved recall",
   },

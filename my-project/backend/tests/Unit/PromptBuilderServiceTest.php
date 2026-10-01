@@ -23,7 +23,7 @@ class PromptBuilderServiceTest extends TestCase
 
     public function test_build_orders_by_priority(): void
     {
-        $out = $this->svc->build('Sara', 17, [
+        $out = $this->svc->build('Mohammed', 17, [
             ['title' => 'B second', 'instruction' => 'Second.', 'strength' => 'guide', 'priority' => 2],
             ['title' => 'A first', 'instruction' => 'First.', 'strength' => 'strict', 'priority' => 1],
         ]);
@@ -49,7 +49,7 @@ class PromptBuilderServiceTest extends TestCase
         $this->assertStringContainsString('Student', $out);
         $this->assertStringContainsString('age 99', $out);
 
-        $over = $this->svc->build('Sara', 200, []);
+        $over = $this->svc->build('Mohammed', 200, []);
         $this->assertStringContainsString('age 120', $over);
     }
 

@@ -7,8 +7,6 @@ import { toast } from "sonner";
 import {
   Activity,
   Database,
-  Eye,
-  EyeOff,
   Info,
   KeyRound,
   User,
@@ -65,7 +63,6 @@ export function SettingsModal({
   const [name, setName] = React.useState(displayName);
   const [ageStr, setAgeStr] = React.useState(String(Number.isFinite(age) ? age : 14));
   const [profileError, setProfileError] = React.useState<string | undefined>();
-  const [revealed, setRevealed] = React.useState(false);
   const [font, setFont] = React.useState<FontSize>("m");
   const [reduceMotion, setReduceMotion] = React.useState(false);
   const [confirmChats, setConfirmChats] = React.useState(false);
@@ -79,7 +76,6 @@ export function SettingsModal({
       setName(displayName);
       setAgeStr(String(Number.isFinite(age) ? age : 14));
       setProfileError(undefined);
-      setRevealed(false);
       setFont(fontStorage.get());
       setReduceMotion(motionStorage.get());
       setConfirmChats(false);
@@ -90,14 +86,8 @@ export function SettingsModal({
     }
   }, [open, displayName, age]);
 
-  // Auto-hide revealed key after 10s (security)
-  React.useEffect(() => {
-    if (!revealed) return;
-    const t = setTimeout(() => setRevealed(false), 10000);
-    return () => clearTimeout(t);
-  }, [revealed]);
-
   const fullKey = keyStorage.get();
+  const maskedKey = keyStorage.mask(fullKey);
   const progress = getDiscipline();
   // Weekly report card (§6.7): chats active in last 7 days + self-solves + locks.
   // Cheap local parse — runs each render, no memo needed.
@@ -317,34 +307,20 @@ export function SettingsModal({
           </Button>
         </section>
 
-        {/* 2. Key — localStorage ONLY, never Supabase */}
+        {/* 2. Key — localStorage ONLY, never Supabase. Masked-only display:
+            the full key is never rendered in the interface, only sent to OpenRouter. */}
         <section aria-label="API key">
           <h3 className="font-heading flex items-center gap-1.5 font-extrabold">
             <KeyRound size={16} aria-hidden className="text-slate-400" /> API key (this device only)
           </h3>
           <p className="mt-1 text-xs text-slate-500">
-            Stored in browser localStorage. Never uploaded, never in the database.
+            Stored in browser localStorage. Sent only to OpenRouter. Never uploaded, never in the database, never shown in full.
           </p>
           {fullKey ? (
             <div className="mt-2 rounded-2xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800">
-              <code className="font-mono font-bold">{revealed ? fullKey : keyStorage.mask(fullKey)}</code>
-              {revealed && <span className="block text-xs text-slate-500">Auto-hides in 10s. Never share it.</span>}
+              <code className="font-mono font-bold">{maskedKey}</code>
+              <span className="block text-xs text-slate-500">Hidden for security — even you never see it in full here. Re-enter to change it.</span>
               <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRevealed((v) => !v)}
-                  className="flex min-h-[40px] items-center gap-1.5 rounded-xl border px-4 text-xs font-extrabold"
-                >
-                  {revealed ? (
-                    <>
-                      <EyeOff size={14} aria-hidden /> Hide
-                    </>
-                  ) : (
-                    <>
-                      <Eye size={14} aria-hidden /> Reveal 10s
-                    </>
-                  )}
-                </button>
                 <Link href="/onboarding?step=3" className="flex min-h-[40px] items-center rounded-xl border px-4 text-xs font-extrabold">
                   Change key
                 </Link>

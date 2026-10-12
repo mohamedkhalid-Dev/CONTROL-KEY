@@ -62,6 +62,8 @@ export interface StoredProfile {
 // --- OpenRouter key (SECRET — browser localStorage ONLY, never Supabase) ---
 // Security rule (migration 0006): key_vault table was dropped. Do NOT POST
 // this key to /vault/store, Supabase, or any backend. Device-only by design.
+// Sent ONLY to https://openrouter.ai/api/v1 (see lib/openrouter.ts).
+// Never rendered in full in the UI — display keyStorage.mask() only.
 export const storageKeys = {
   openrouterKey: "ck_openrouter_key",
   sidebarOpen: "ck_sidebar_open",

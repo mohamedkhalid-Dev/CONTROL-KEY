@@ -1,6 +1,10 @@
 /**
  * OpenRouter helpers — validation + streaming chat (Stage 4).
- * Key never logged in full. All errors mapped to kid-friendly messages.
+ * SECURITY: the user's OpenRouter API key lives ONLY in browser localStorage
+ * (`ck_openrouter_key`), is sent ONLY to https://openrouter.ai/api/v1 (never
+ * to our backend, never to Supabase), and is never displayed in full in the
+ * interface (masked as sk-or-...****1234) nor logged in full anywhere.
+ * All errors mapped to kid-friendly messages.
  */
 
 import { asksForImageGeneration, buildImageRefusal } from "@/lib/promptBuilder";

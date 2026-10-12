@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/Input";
-import { KeyGuide, EyeButton } from "@/components/onboarding/KeyGuide";
+import { KeyGuide } from "@/components/onboarding/KeyGuide";
 import { validateApiKey } from "@/lib/validators";
 import { validateOpenRouterKey } from "@/lib/openrouter";
 
 export interface KeyState {
   key: string;
-  show: boolean;
   testing: boolean;
   testedOk: boolean;
   testMsg: string | null;
@@ -52,32 +51,24 @@ export function KeyStep({
       </h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
         Free key. It stays in your browser only — never uploaded or stored in
-        our database.
+        our database. Sent only to OpenRouter. Never shown in full.
       </p>
 
-      <div className="mt-6 flex items-start gap-2">
-        <div className="flex-1">
-          <Input
-            label="API key"
-            type={state.show ? "text" : "password"}
-            placeholder="sk-or-v1-..."
-            value={state.key}
-            autoComplete="off"
-            spellCheck={false}
-            onChange={(e) =>
-              setState({ ...state, key: e.target.value, testedOk: false, testMsg: null })
-            }
-            onBlur={() => setState({ ...state, key: state.key.trim() })}
-            error={formatError && !formatError.ok ? formatError.error : undefined}
-            hint={!formatError ? "Starts with sk-or-. Spaces cut off alone." : undefined}
-          />
-        </div>
-        <div className="pt-7">
-          <EyeButton
-            show={state.show}
-            onToggle={() => setState({ ...state, show: !state.show })}
-          />
-        </div>
+      <div className="mt-6">
+        <Input
+          label="API key"
+          type="password"
+          placeholder="sk-or-v1-..."
+          value={state.key}
+          autoComplete="off"
+          spellCheck={false}
+          onChange={(e) =>
+            setState({ ...state, key: e.target.value, testedOk: false, testMsg: null })
+          }
+          onBlur={() => setState({ ...state, key: state.key.trim() })}
+          error={formatError && !formatError.ok ? formatError.error : undefined}
+          hint={!formatError ? "Starts with sk-or-. Spaces cut off alone. Hidden for security." : undefined}
+        />
       </div>
 
       <KeyGuide

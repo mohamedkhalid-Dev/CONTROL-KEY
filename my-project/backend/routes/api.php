@@ -24,10 +24,11 @@ Route::get('/health', [HealthController::class, 'show']);
 // Rate-limited proxy routes (60/min/IP via throttle middleware)
 Route::middleware('throttle:60,1')->group(function () {
     Route::post('/validate-key', [KeyController::class, 'validate']);
-    // REMOVED (minimal-store policy): /vault/store deleted — OpenRouter keys
+    // REMOVED (device-only key policy): /vault/store deleted — OpenRouter keys
     // stay in browser localStorage ONLY, never in Supabase (key_vault dropped
-    // in migration 0006). Any call now returns 410 Gone (see KeyController::store).
-    Route::post('/vault/store', [KeyController::class, 'store']);
+    // in migration 0006). No upload endpoint exists, so the key cannot leave
+    // the device. Any legacy call now 404s. (KeyController::store kept as
+    // 410 Gone only for direct controller reference, no route points to it.)
     Route::post('/chat', [ChatController::class, 'chat']);
     Route::post('/chat/proxy', [ChatController::class, 'chat']);
     // REMOVED: /feedback deleted — feedback table dropped as not required

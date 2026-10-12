@@ -117,7 +117,7 @@ Add a model: extend `FREE_MODELS` in `lib/openrouter.ts` + backend allowlist.
 
 - `lib/promptBuilder.ts` + `PromptBuilderService.php` share **prompt v1** (Appendix B). Log version per message for violation debugging. Sorting by `priority asc` decides conflicts.
 - RLS: owner-only `auth.uid()=user_id`; `messages` joins parent session; `rule_templates` public SELECT. Seed with service role only.
-- Key masking: `sk-or-...****1234` everywhere (logs, UI reveal auto-hides 10s, exports masked).
+- Key security: device-only `ck_openrouter_key` (localStorage), sent only to OpenRouter, never shown in full in the UI (masked `sk-or-...****1234` in logs, Settings, and exports).
 
 ## Roadmap
 

@@ -43,7 +43,6 @@ export function OnboardingWizard() {
   const [age, setAge] = useState(DEFAULT_DRAFT.age);
   const [keyState, setKeyState] = useState<KeyState>({
     key: "",
-    show: false,
     testing: false,
     testedOk: false,
     testMsg: null,

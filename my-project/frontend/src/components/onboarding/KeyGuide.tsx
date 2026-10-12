@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 /** Collapsed 4-step mini guide — full version lives at /guide/get-key. */
 export function KeyGuide({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
@@ -42,18 +42,5 @@ export function KeyGuide({ open, setOpen }: { open: boolean; setOpen: (v: boolea
         </ol>
       )}
     </div>
-  );
-}
-
-export function EyeButton({ show, onToggle }: { show: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-label={show ? "Hide key" : "Show key"}
-      className="flex h-12 w-12 items-center justify-center rounded-2xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-    >
-      {show ? <EyeOff size={20} /> : <Eye size={20} />}
-    </button>
   );
 }
